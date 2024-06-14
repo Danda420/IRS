@@ -86,15 +86,21 @@ def search():
     results.sort(key=lambda x: x[1], reverse=True)
 
     # Display results
+    num_doc_matched = 0
     search_result_frame.delete("1.0", tk.END)
     for row, similarity in results:
         if similarity > 0.00:
+            num_doc_matched = num_doc_matched + 1
             result_text = f"{row['text']}\nPenulis: {row['penulis']}\nTahun: {row['tahun']}\n"
             search_result_frame.insert(tk.END, result_text)
             search_result_frame.insert(tk.END, "Document Link\n\n")
             search_result_frame.tag_add("link", "end-3c linestart", "end-2c lineend")
             search_result_frame.tag_config("link", foreground="blue", underline=1)
             search_result_frame.tag_bind("link", "<Button-1>", lambda e, url=row['link']: open_link(url))
+
+    if num_doc_matched == 0:
+        result_text = "No item matched"
+        search_result_frame.insert(tk.END, result_text)
 
 def open_link(url):
     webbrowser.open_new(url)
