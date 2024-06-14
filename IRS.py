@@ -102,6 +102,9 @@ def search():
         result_text = "No item matched"
         search_result_frame.insert(tk.END, result_text)
 
+def event_search_btn(e):
+    search()
+
 def open_link(url):
     webbrowser.open_new(url)
 
@@ -124,6 +127,8 @@ search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=20)
 
 search_button = tk.Button(search_frame, text="🔍", command=search)
 search_button.pack(side=tk.RIGHT, padx=20)
+# add event binding "enter key" to searching
+root.bind('<Return>', event_search_btn)
 
 # Main content
 main_frame = tk.Frame(root)
