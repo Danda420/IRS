@@ -1,13 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import pandas as pd
+import numpy as np
 import re
 import nltk
 import webbrowser
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
-from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Download necessary NLTK data
@@ -85,12 +86,44 @@ def search():
     results = [(data.iloc[i], cosine_similarities[0][i]) for i in range(len(corpus))]
     results.sort(key=lambda x: x[1], reverse=True)
 
+    # Calculate term frequency matrix
+    count_vectorizer = CountVectorizer()
+    tf_matrix = count_vectorizer.fit_transform(corpus)
+    terms = count_vectorizer.get_feature_names_out()
+    tf_df = pd.DataFrame(tf_matrix.toarray(), columns=terms, index=list(data['text']))
+
+    # Query term frequency
+    query_df = pd.DataFrame(0, columns=terms, index=[0])
+    for term in tokenized_query:
+        if term in query_df.columns:
+            query_df.at[0, term] = 1
+
+    # Weight calculations
+    weight = tf_matrix.multiply(query_df)
+    weight_df = pd.DataFrame(weight.A, columns=terms, index=list(data['text']))
+
+    square_penyebut = tf_df.apply(np.square)
+    sum_pembilang = weight_df.sum(axis=1)
+    sum_penyebut = square_penyebut.sum(axis=1)
+    sqrt_penyebut = np.sqrt(sum_penyebut)
+
+    square_query = query_df.apply(np.square)
+    sum_square_query = square_query.sum(axis=1)
+    sqrt_square_query = np.sqrt(sum_square_query)
+
+    multiply_documents = sqrt_penyebut * sqrt_square_query[0]
+    result_similarities = sum_pembilang / multiply_documents
+    result_similarities_sorted = sorted(enumerate(result_similarities), key=lambda x: x[1], reverse=True)
+
+    print(result_similarities)
+
     # Display results
     num_doc_matched = 0
     search_result_frame.delete("1.0", tk.END)
-    for row, similarity in results:
+    for i, similarity in result_similarities_sorted:
         if similarity > 0.00:
-            num_doc_matched = num_doc_matched + 1
+            num_doc_matched += 1
+            row = data.iloc[i]
             result_text = f"{row['text']}\nPenulis: {row['penulis']}\nTahun: {row['tahun']}\n"
             search_result_frame.insert(tk.END, result_text)
             search_result_frame.insert(tk.END, "Document Link\n\n")
@@ -99,8 +132,7 @@ def search():
             search_result_frame.tag_bind("link", "<Button-1>", lambda e, url=row['link']: open_link(url))
 
     if num_doc_matched == 0:
-        result_text = "No item matched"
-        search_result_frame.insert(tk.END, result_text)
+        search_result_frame.insert(tk.END, "No item matched")
 
 def event_search_btn(e):
     search()
