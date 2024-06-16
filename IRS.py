@@ -129,8 +129,6 @@ def search():
     result_similarities = sum_pembilang / multiply_documents
     result_similarities_sorted = sorted(enumerate(result_similarities), key=lambda x: x[1], reverse=True)
 
-    print(result_similarities)
-
     # mendisplaykan hasil
     num_doc_matched = 0
     search_result_frame.delete("1.0", tk.END)
@@ -140,10 +138,10 @@ def search():
             row = data.iloc[i]
             result_text = f"{row['text']}\nPenulis: {row['penulis']}\nTahun: {row['tahun']}\n"
             search_result_frame.insert(tk.END, result_text)
-            search_result_frame.insert(tk.END, "Document Link\n\n")
-            search_result_frame.tag_add("link", "end-3c linestart", "end-2c lineend")
-            search_result_frame.tag_config("link", foreground="blue", underline=1)
-            search_result_frame.tag_bind("link", "<Button-1>", lambda e, url=row['link']: open_link(url))
+            link_tag = f"link-{num_doc_matched}"
+            search_result_frame.insert(tk.END, "Document Link\n\n", link_tag)
+            search_result_frame.tag_config(link_tag, foreground="blue", underline=1)
+            search_result_frame.tag_bind(link_tag, "<Button-1>", lambda e, url=row['link']: open_link(url))
 
     if num_doc_matched == 0:
         search_result_frame.insert(tk.END, "No item matched")
