@@ -180,7 +180,7 @@ main_frame = tk.Frame(root)
 main_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, pady=10)
 
 # Search results section
-search_result_frame = tk.Text(main_frame, bg="white")
+search_result_frame = tk.Text(main_frame, bg="white", fg="black")
 search_result_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
 # Run the application
