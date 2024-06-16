@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import pandas as pd
@@ -25,24 +26,22 @@ root.geometry("800x600")
 data = None
 corpus = []
 
-# Function to handle CSV file selection
-def select_file():
+def load_file():
     global data, corpus
     data = None
     corpus = []
-    file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
-    print(file_path)
-    if file_path:
-        try:
-            data = pd.read_csv(file_path, encoding='latin-1')
-            if len(data.columns) >= 2:
-                data.columns = ['label', 'text', 'penulis', 'tahun', 'link']
-            else:
-                raise ValueError("CSV file must have at least two columns")
-            preprocess_text()
-            messagebox.showinfo("File Loaded", "CSV file loaded successfully.")
-        except Exception as e:
-            messagebox.showerror("Error", f"Error loading file: {str(e)}")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file = os.path.join(script_dir, "dataset.csv")
+    
+    try:
+        data = pd.read_csv(file, encoding='latin-1')
+        if len(data.columns) >= 2:
+            data.columns = ['label', 'text', 'penulis', 'tahun', 'link']
+        else:
+            raise ValueError("CSV file must have at least two columns")
+        preprocess_text()
+    except Exception as e:
+        messagebox.showerror("Error", f"Error loading file: {str(e)}")
 
 # Function to preprocess text
 def preprocess_text():
@@ -86,38 +85,53 @@ def search():
     results = [(data.iloc[i], cosine_similarities[0][i]) for i in range(len(corpus))]
     results.sort(key=lambda x: x[1], reverse=True)
 
-    # Calculate term frequency matrix
+    # menghitung term tiap dokumen
     count_vectorizer = CountVectorizer()
     tf_matrix = count_vectorizer.fit_transform(corpus)
+
+    # mengambil nama terms dengan menggunakan get_features_names_out
     terms = count_vectorizer.get_feature_names_out()
     tf_df = pd.DataFrame(tf_matrix.toarray(), columns=terms, index=list(data['text']))
 
-    # Query term frequency
+    # menghitung TF pada query
     query_df = pd.DataFrame(0, columns=terms, index=[0])
     for term in tokenized_query:
         if term in query_df.columns:
             query_df.at[0, term] = 1
 
-    # Weight calculations
+    # menghitung Weight
     weight = tf_matrix.multiply(query_df)
     weight_df = pd.DataFrame(weight.A, columns=terms, index=list(data['text']))
 
+    # menghitung penyebut dengan mengkuadratkan term pada tiap dokumen |A^2|
     square_penyebut = tf_df.apply(np.square)
+
+    # menghitung jumlah pembilang pada masing-masing document
     sum_pembilang = weight_df.sum(axis=1)
+
+    # menghitung jumlah penyebut pada masing-masing document
     sum_penyebut = square_penyebut.sum(axis=1)
+
+    # menghitung akar kuadrat dari jumlah penyebut masing-masing document
     sqrt_penyebut = np.sqrt(sum_penyebut)
 
+    # melakukan operasi kuadrat pada term query |Q^2|
     square_query = query_df.apply(np.square)
+
+    # menghitung akar kuadrat dari query |Q^2|
     sum_square_query = square_query.sum(axis=1)
     sqrt_square_query = np.sqrt(sum_square_query)
 
+    # menghitung perkalian antara |A|.|B|
     multiply_documents = sqrt_penyebut * sqrt_square_query[0]
+
+    # menghitung hasil similarities
     result_similarities = sum_pembilang / multiply_documents
     result_similarities_sorted = sorted(enumerate(result_similarities), key=lambda x: x[1], reverse=True)
 
     print(result_similarities)
 
-    # Display results
+    # mendisplaykan hasil
     num_doc_matched = 0
     search_result_frame.delete("1.0", tk.END)
     for i, similarity in result_similarities_sorted:
@@ -140,6 +154,8 @@ def event_search_btn(e):
 def open_link(url):
     webbrowser.open_new(url)
 
+load_file()
+
 # Header
 header_frame = tk.Frame(root)
 header_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
@@ -147,18 +163,15 @@ header_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
 header_label = tk.Label(header_frame, text="Information Retrieval System", font=("Arial", 16))
 header_label.pack(side=tk.LEFT, padx=20)
 
-select_file_button = tk.Button(header_frame, text="Select CSV file", command=select_file)
-select_file_button.pack(side=tk.RIGHT, padx=20)
-
 # Search bar
 search_frame = tk.Frame(root)
 search_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
 
 search_entry = tk.Entry(search_frame, font=("Arial", 14))
-search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=20)
+search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
 
-search_button = tk.Button(search_frame, text="🔍", command=search)
-search_button.pack(side=tk.RIGHT, padx=20)
+search_button = tk.Button(search_frame, text="🔍", command=search, width=5)
+search_button.pack(side=tk.RIGHT, padx=10)
 # add event binding "enter key" to searching
 root.bind('<Return>', event_search_btn)
 
