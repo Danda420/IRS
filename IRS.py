@@ -129,6 +129,8 @@ def search():
     result_similarities = sum_pembilang / multiply_documents
     result_similarities_sorted = sorted(enumerate(result_similarities), key=lambda x: x[1], reverse=True)
 
+    print(result_similarities)
+    
     # mendisplaykan hasil
     num_doc_matched = 0
     search_result_frame.delete("1.0", tk.END)
