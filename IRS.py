@@ -1,14 +1,8 @@
 import os
 import subprocess
-import pkg_resources
 pip_pkgs = ["nltk", "numpy", "pandas", "Sastrawi", "scikit-learn", "ttkbootstrap"]
 for pip_pkg in pip_pkgs:
-    try:
-        dist = pkg_resources.get_distribution(pip_pkg)
-        print(f"{pip_pkg} is already installed.")
-    except pkg_resources.DistributionNotFound:
-        print(f"{pip_pkg} is not installed. Installing now...")
-        subprocess.check_call(["pip", "install", pip_pkg])
+    subprocess.check_call(["pip", "install", pip_pkg])
         
 import tkinter as tk
 from tkinter import filedialog, messagebox
