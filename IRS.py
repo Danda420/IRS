@@ -136,14 +136,15 @@ def cosine_similarity_process(query, corpus):
 def preprocess_text():
     global corpus
     text = list(data['text'])
-    lemmatizer = WordNetLemmatizer()
+    factory = StemmerFactory()
+    stemmer = factory.create_stemmer()
     for i in range(len(text)):
         r = re.sub('[^a-zA-Z]', ' ', text[i])
         r = re.sub('[!@#$%^&*()_+-<>?/.:;"{}’[]|\]', ' ', text[i])
         r = r.lower()
         r = r.split()
-        r = [word for word in r if word not in stopwords.words('english')]
-        r = [lemmatizer.lemmatize(word) for word in r]
+        r = [word for word in r if word not in stopwords.words('indonesian')]
+        r = [stemmer.stem(word) for word in r]
         r = ' '.join(r)
         corpus.append(r)
     data['text'] = corpus
