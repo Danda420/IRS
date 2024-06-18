@@ -22,25 +22,25 @@ from sklearn.metrics.pairwise import cosine_similarity
 import Sastrawi
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
-# Download necessary NLTK data
+# Unduh data NLTK yang diperlukan
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
 
-# Initialize the main window
+# Inisialisasi main window
 root = tk.Tk()
-root.title("Information Retrieval System")
-width = 1440
+root.title("Sistem Temu Kembali Informasi")
+width = 800
 height = 600
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 x_coordinate = int((screen_width/2) - (width/2))
 y_coordinate = int((screen_height/2) - (height/2) - 100)
-# set windows to center when it's run for first time
+# set jendela di tengah saat pertama kali dijalankan
 root.geometry(f"{width}x{height}+{x_coordinate}+{y_coordinate}")
 root.minsize(800, 600)
 
-# Global variables
+# Variabel global
 data = None
 corpus = []
 
@@ -48,8 +48,10 @@ def load_file():
     global data, corpus
     data = None
     corpus = []
-    # script_dir = os.getcwd() # uncomment this if u wanna use it on jupyter or smth
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
+    # script_dir = os.getcwd()      # Uncomment ini jika ingin dijalankan di Jupyter
+
     file = os.path.join(script_dir, "dataset.csv")
     
     try:
@@ -57,10 +59,10 @@ def load_file():
         if len(data.columns) >= 2:
             data.columns = ['label', 'text', 'penulis', 'tahun', 'link']
         else:
-            raise ValueError("CSV file must have at least two columns")
+            raise ValueError("File CSV harus memiliki minimal dua kolom")
         preprocess_text()
     except Exception as e:
-        messagebox.showerror("Error", f"Error loading file: {str(e)}")
+        messagebox.showerror("Error", f"Error saat memuat file: {str(e)}")
 
 def processed_query(query):
     factory = StemmerFactory()
@@ -78,53 +80,53 @@ def cosine_similarity_process(query, corpus):
     preprocessed_query = processed_query(query)
     tokenized_query = word_tokenize(preprocessed_query)
 
-    # create a TF-IDF vectorixer and calculate TF-IDF
+    # Buat TF-IDF vectorizer dan hitung TF-IDF
     tfidf_vectorizer = TfidfVectorizer()
     tfidf_matrix = tfidf_vectorizer.fit_transform(corpus)
     query_vector = tfidf_vectorizer.transform([preprocessed_query])
 
-    # menghitung term tiap dokumen
+    # Hitung term untuk setiap dokumen
     count_vectorizer = CountVectorizer()
     tf_matrix = count_vectorizer.fit_transform(corpus)
 
-    # mengambil nama terms dengan menggunakan get_features_names_out
+    # Dapatkan nama-nama term dengan menggunakan get_features_names_out
     terms = count_vectorizer.get_feature_names_out()
     tf_df = pd.DataFrame(tf_matrix.toarray(), columns=terms,
                          index=list(data['text']))
 
-    # menghitung TF pada query
+    # Hitung TF pada query
     query_tf = pd.DataFrame(0, columns=terms, index=[0])
     for term in tokenized_query:
         if term in query_tf.columns:
             query_tf.at[0, term] = 1
 
-    # menghitung weight (W)
+    # Hitung weight (W)
     weight = tf_matrix.multiply(query_tf)
     weight_df = pd.DataFrame(weight.A, columns=terms, index=list(data['text']))
 
-    # menghitung penyebut dengan mengkuadratkan term pada tiap dokumen |A^2|
+    # Hitung penyebut dengan mengkuadratkan term pada tiap dokumen |A^2|
     square_penyebut = tf_df.apply(np.square)
 
-    # menghitung jumlah pembilang pada masing-masing document
+    # Hitung jumlah pembilang pada masing-masing dokumen
     sum_pembilang = weight_df.sum(axis=1)
 
-    # menghitung jumlah penyebut pada masing-masing document
+    # Hitung jumlah penyebut pada masing-masing dokumen
     sum_penyebut = square_penyebut.sum(axis=1)
 
-    # menghitung akar kuadrat dari jumlah penyebut masing-masing document
+    # Hitung akar kuadrat dari jumlah penyebut masing-masing dokumen
     sqrt_penyebut = np.sqrt(sum_penyebut)
 
-    # melakukan operasi kuadrat pada term query |Q^2|
+    # Lakukan operasi kuadrat pada term query |Q^2|
     square_query = query_tf.apply(np.square)
 
-    # menghitung akar kuadrat dari query |Q^2|
+    # Hitung akar kuadrat dari query |Q^2|
     sum_square_query = square_query.sum(axis=1)
     sqrt_square_query = np.sqrt(sum_square_query)
 
-    # menghitung perkalian antara |A|.|B|
+    # Hitung perkalian antara |A|.|B|
     multiply_documents = sqrt_penyebut * sqrt_square_query[0]
 
-    # menghitung hasil similarities
+    # Hitung hasil similarities
     result_similarities = sum_pembilang / multiply_documents
     result_similarities_sorted = sorted(
         enumerate(result_similarities), key=lambda x: x[1], reverse=True)
@@ -132,7 +134,7 @@ def cosine_similarity_process(query, corpus):
     print(result_similarities)
     return result_similarities_sorted
 
-# Function to preprocess text
+# Fungsi untuk preprocessing teks
 def preprocess_text():
     global corpus
     text = list(data['text'])
@@ -149,23 +151,23 @@ def preprocess_text():
         corpus.append(r)
     data['text'] = corpus
 
-# Function to handle search
+# Fungsi untuk menangani pencarian
 def search():
     if data is None:
-        messagebox.showerror("Error", "Please load a CSV file first.")
+        messagebox.showerror("Error", "Silakan muat file CSV terlebih dahulu.")
         return
 
     query = search_entry.get()
     if not query:
-        messagebox.showerror("Error", "Please enter a search query.")
+        messagebox.showerror("Error", "Silakan masukkan query pencarian.")
         return
 
-    # call function cosine_similarity_process
+    # panggil fungsi cosine_similarity_process
     result_similarities_sorted = cosine_similarity_process(query, corpus)
     
-    # mendisplaykan hasil
+    # menampilkan hasil
     num_doc_matched = 0
-    # clear previous results
+    # hapus hasil sebelumnya
     for widget in main_frame.winfo_children():
         widget.destroy()
     total_item_founded = tk.Label(
@@ -179,111 +181,115 @@ def search():
             underlined_font = Font(
                 family='Arial', size=16)
 
-            # add label title to display the title document
+            # tambahkan label judul untuk menampilkan judul dokumen
             title_label = tb.Label(main_frame, text=row['text'].title(), foreground='blue', cursor='hand2',
                                    wraplength=1920, justify='left', anchor='w', font=underlined_font)
             title_label.pack(fill='x', pady=(0, 0), ipady=0)
-            # add event bind to click the hyperlink title document
+            # tambahkan event bind untuk mengklik hyperlink judul dokumen
             title_label.bind("<Button-1>", lambda e,
                              url=row['link']: open_link(url))
             title_label.bind("<Enter>", label_hover_enter)
             title_label.bind("<Leave>", label_hover_leave)
 
-            # add author and year of document publication
-            author_label = tk.Label(main_frame, text=f"Penulis: {row['penulis']} | Tahun Terbit: {row['tahun']}", anchor='w')
+            # tambahkan label penulis dan tahun publikasi dokumen
+            author_label = tk.Label(main_frame, text=f"Penulis: {row['penulis']} | Tahun: {row['tahun']}", anchor='w')
             author_label.pack(fill='x')
 
-            # add similarity label
+            # tambahkan label similarity
             similarity_label = tk.Label(main_frame, text=f"Similarity: {similarity}", anchor='nw', font=(BOLD))
             similarity_label.pack(fill='x',  pady=(0, 20))
-            # can you add padding here
+            # bisa tambahkan padding di sini
 
-    total_item_founded.config(text=f"Total item found: {num_doc_matched}")
-    # for add scrollbar in main_frame
+    total_item_founded.config(text=f"About {num_doc_matched} results")
+    # untuk menambahkan scrollbar di main_frame
     main_frame.update_idletasks()
     canvas.configure(scrollregion=canvas.bbox("all"))
 
-    # if document not found, display it
+    # jika dokumen tidak ditemukan, tampilkan pesan
     if num_doc_matched == 0:
         no_result_label = tk.Label(
-            main_frame, text="No Item Matched", anchor='w')
+            main_frame, text="Did not match any documents", anchor='w')
         no_result_label.pack(fill='x', pady=(0, 12))
         canvas.configure(scrollregion=canvas.bbox("all"))
+
 def label_hover_enter(event):
-    event.widget.config(foreground='blue', font=('Arial', 18, 'bold', 'underline'))
-# Function to handle label hover leave event
+    event.widget.config(foreground='blue', font=('Arial', 16, 'underline'))
+
+# Fungsi untuk event label hover leave
 def label_hover_leave(event):
-    event.widget.config(foreground='blue', font=('Arial', 18, 'bold', 'normal'))
-    
+    event.widget.config(foreground='blue', font=('Arial', 16, 'normal'))
+
 def event_search_btn(e):
     search()
 
 def open_link(url):
     webbrowser.open_new(url)
 
-# function to wrap label title
+# fungsi untuk wrap label judul
 def update_wraplength(event=None):
     for widget in main_frame.winfo_children():
         widget.config(update_wraplength=main_frame.winfo_width())
 
-# function to scroll the main_frame with mouse
+# fungsi untuk scroll main_frame dengan mouse
 def on_mouse_wheel_scroll(event):
     canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-# function to clear keyword
+# fungsi untuk menghapus kata kunci
 def clear_key():
     search_entry.delete(0, tk.END)
+    for widget in main_frame.winfo_children():
+        widget.destroy()
+    # Reset scroll region
+    canvas.configure(scrollregion=canvas.bbox("all"))
 
 load_file()
 
-# Header
-header_frame = tk.Frame(root)
-header_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
+# Header dan Search bar digabung dalam satu frame
+header_search_frame = tk.Frame(root)
+header_search_frame.pack(side=tk.TOP, fill=tk.X, pady=(30, 10))
 
-header_label = tk.Label(header_frame, text="Scholarlink", font=("Arial", 24, "bold"))
+header_label = tk.Label(header_search_frame, text="Scholarlink", font=("Arial", 24, "bold"))
 header_label.pack(side=tk.LEFT, padx=20)
 
-# Search bar
-search_frame = tk.Frame(root)
-search_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
+search_frame = tk.Frame(header_search_frame)
+search_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-search_entry = tk.Entry(search_frame, font=("Arial", 14), width=60)
-search_entry.pack(side=tk.LEFT, fill=tk.X, padx=(20, 0), ipady=5)
+search_entry = tk.Entry(search_frame, font=("Arial", 18), width=40)
+search_entry.pack(side=tk.LEFT, fill=tk.X, padx=(0, 0), ipady=5)
 
-clear_keyword = tb.Button(search_frame, text='x', command=clear_key, bootstyle='danger')
+clear_keyword = tb.Button(search_frame, text='X', command=clear_key, bootstyle='primary')
 clear_keyword.pack(side=tk.LEFT, ipadx=5, ipady=5)
 
 search_button = tb.Button(search_frame, text="🔍", command=search, width=5, bootstyle='primary')
 search_button.pack(side=tk.LEFT, fill=tk.X, padx=(10, 0), ipady=5)
 
-
-# add event binding "enter key" to searching
+# event binding "enter key" untuk pencarian
 root.bind('<Return>', event_search_btn)
 
-# add canvas
+# tambahkan canvas
 canvas = tk.Canvas(root)
 canvas.pack(side='left', fill='both', expand=True, padx=20)
 
-# add scrollbar to scroll the main_frame
+# tambahkan scrollbar untuk meng-scroll main_frame
 scrollbar = tk.Scrollbar(root, orient='vertical', command=canvas.yview)
 scrollbar.pack(side='right', fill='y')
 
-# configure the canvas
+# konfigurasi canvas
 canvas.configure(yscrollcommand=scrollbar.set)
 
-# Main content
+# Konten utama
 main_frame = tk.Frame(canvas)
 
-# add main_frame to canvas
+# tambahkan main_frame ke dalam canvas
 canvas.create_window((0, 0), window=main_frame, anchor='nw')
 
 def on_configure_scroll(event):
     canvas.configure(scrollregion=canvas.bbox("all"))
 
-# add event bind to scroll frame
+# event bind untuk meng-scroll frame
 canvas.bind("<Configure>", on_configure_scroll)
-# add event bind to scroll frame with mousewheel
+# event bind untuk meng-scroll frame dengan mousewheel
 canvas.bind_all("<MouseWheel>", on_mouse_wheel_scroll)
 
-# Run the application
+# Jalankan aplikasi
 root.mainloop()
