@@ -161,7 +161,7 @@ def search():
             num_doc_matched += 1
             row = data.iloc[i]
             underlined_font = Font(
-                family='Arial', underline=True, size=16, weight='bold')
+                family='Arial', size=16)
 
             # add label title to display the title document
             title_label = tb.Label(main_frame, text=row['text'].title(), foreground='blue', cursor='hand2',
@@ -170,6 +170,8 @@ def search():
             # add event bind to click the hyperlink title document
             title_label.bind("<Button-1>", lambda e,
                              url=row['link']: open_link(url))
+            title_label.bind("<Enter>", label_hover_enter)
+            title_label.bind("<Leave>", label_hover_leave)
 
             # add author and year of document publication
             author_label = tk.Label(main_frame, text=f"Penulis: {
@@ -188,7 +190,12 @@ def search():
             main_frame, text="No Item Matched", anchor='w')
         no_result_label.pack(fill='x', pady=(0, 12))
         canvas.configure(scrollregion=canvas.bbox("all"))
-
+def label_hover_enter(event):
+    event.widget.config(foreground='blue', font=('Arial', 18, 'bold', 'underline'))
+# Function to handle label hover leave event
+def label_hover_leave(event):
+    event.widget.config(foreground='#B0C4DE', font=('Arial', 18, 'bold', 'normal'))
+    
 def event_search_btn(e):
     search()
 
@@ -224,10 +231,10 @@ search_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
 search_entry = tk.Entry(search_frame, font=("Arial", 14), width=60)
 search_entry.pack(side=tk.LEFT, fill=tk.X, padx=(20, 0), ipady=5)
 
-clear_keyword = tb.Button(search_frame, text='x', command=clear_key)
+clear_keyword = tb.Button(search_frame, text='x', command=clear_key, bootstyle='danger')
 clear_keyword.pack(side=tk.LEFT, ipadx=5, ipady=5)
 
-search_button = tk.Button(search_frame, text="🔍", command=search, width=5)
+search_button = tk.Button(search_frame, text="🔍", command=search, width=5, bootstyle='primary')
 search_button.pack(side=tk.LEFT, fill=tk.X, padx=(10, 0), ipady=5)
 
 
