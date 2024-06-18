@@ -194,8 +194,7 @@ def search():
             author_label.pack(fill='x')
 
             # add similarity label
-            similarity_label = tk.Label(main_frame, text=f"Similarity: {
-                                        similarity}", anchor='nw', font=(BOLD))
+            similarity_label = tk.Label(main_frame, text=f"Similarity: {similarity}", anchor='nw', font=(BOLD))
             similarity_label.pack(fill='x',  pady=(0, 20))
             # can you add padding here
 
