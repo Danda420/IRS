@@ -208,7 +208,7 @@ def label_hover_enter(event):
     event.widget.config(foreground='blue', font=('Arial', 18, 'bold', 'underline'))
 # Function to handle label hover leave event
 def label_hover_leave(event):
-    event.widget.config(foreground='#B0C4DE', font=('Arial', 18, 'bold', 'normal'))
+    event.widget.config(foreground='blue', font=('Arial', 18, 'bold', 'normal'))
     
 def event_search_btn(e):
     search()
