@@ -234,7 +234,7 @@ search_entry.pack(side=tk.LEFT, fill=tk.X, padx=(20, 0), ipady=5)
 clear_keyword = tb.Button(search_frame, text='x', command=clear_key, bootstyle='danger')
 clear_keyword.pack(side=tk.LEFT, ipadx=5, ipady=5)
 
-search_button = tk.Button(search_frame, text="🔍", command=search, width=5, bootstyle='primary')
+search_button = tb.Button(search_frame, text="🔍", command=search, width=5, bootstyle='primary')
 search_button.pack(side=tk.LEFT, fill=tk.X, padx=(10, 0), ipady=5)
 
 
