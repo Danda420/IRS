@@ -149,7 +149,7 @@ def preprocess_text():
         r = [stemmer.stem(word) for word in r]
         r = ' '.join(r)
         corpus.append(r)
-    data['text'] = corpus
+    # data['text'] = corpus
 
 # Fungsi untuk menangani pencarian
 def search():
