@@ -35,6 +35,7 @@ nltk.download('wordnet')
 root = tk.Tk()
 root.title("Information Retrieval System")
 root.geometry("800x600")
+root.minsize(800, 600)
 
 # Global variables
 data = None
@@ -220,7 +221,7 @@ header_label.pack(side=tk.LEFT, padx=20)
 search_frame = tk.Frame(root)
 search_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
 
-search_entry = tk.Entry(search_frame, font=("Arial", 14), width=30)
+search_entry = tk.Entry(search_frame, font=("Arial", 14), width=60)
 search_entry.pack(side=tk.LEFT, fill=tk.X, padx=(20, 0), ipady=5)
 
 clear_keyword = tb.Button(search_frame, text='x', command=clear_key)
