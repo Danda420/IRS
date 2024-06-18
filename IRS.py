@@ -54,6 +54,65 @@ def load_file():
     except Exception as e:
         messagebox.showerror("Error", f"Error loading file: {str(e)}")
 
+def cosine_similarity_process(query, corpus):
+    global data
+    tokenized_query = word_tokenize(query.lower())
+    preprocessed_query = ' '.join(tokenized_query)
+
+    # create a TF-IDF vectorixer and calculate TF-IDF
+    tfidf_vectorizer = TfidfVectorizer()
+    tfidf_matrix = tfidf_vectorizer.fit_transform(corpus)
+    query_vector = tfidf_vectorizer.transform([preprocessed_query])
+
+    # menghitung term tiap dokumen
+    count_vectorizer = CountVectorizer()
+    tf_matrix = count_vectorizer.fit_transform(corpus)
+
+    # mengambil nama terms dengan menggunakan get_features_names_out
+    terms = count_vectorizer.get_feature_names_out()
+    tf_df = pd.DataFrame(tf_matrix.toarray(), columns=terms,
+                         index=list(data['text']))
+
+    # menghitung TF pada query
+    query_tf = pd.DataFrame(0, columns=terms, index=[0])
+    for term in tokenized_query:
+        if term in query_tf.columns:
+            query_tf.at[0, term] = 1
+
+    # menghitung weight (W)
+    weight = tf_matrix.multiply(query_tf)
+    weight_df = pd.DataFrame(weight.A, columns=terms, index=list(data['text']))
+
+    # menghitung penyebut dengan mengkuadratkan term pada tiap dokumen |A^2|
+    square_penyebut = tf_df.apply(np.square)
+
+    # menghitung jumlah pembilang pada masing-masing document
+    sum_pembilang = weight_df.sum(axis=1)
+
+    # menghitung jumlah penyebut pada masing-masing document
+    sum_penyebut = square_penyebut.sum(axis=1)
+
+    # menghitung akar kuadrat dari jumlah penyebut masing-masing document
+    sqrt_penyebut = np.sqrt(sum_penyebut)
+
+    # melakukan operasi kuadrat pada term query |Q^2|
+    square_query = query_tf.apply(np.square)
+
+    # menghitung akar kuadrat dari query |Q^2|
+    sum_square_query = square_query.sum(axis=1)
+    sqrt_square_query = np.sqrt(sum_square_query)
+
+    # menghitung perkalian antara |A|.|B|
+    multiply_documents = sqrt_penyebut * sqrt_square_query[0]
+
+    # menghitung hasil similarities
+    result_similarities = sum_pembilang / multiply_documents
+    result_similarities_sorted = sorted(
+        enumerate(result_similarities), key=lambda x: x[1], reverse=True)
+
+    print(result_similarities)
+    return result_similarities_sorted
+
 # Function to preprocess text
 def preprocess_text():
     global corpus
@@ -81,66 +140,8 @@ def search():
         messagebox.showerror("Error", "Please enter a search query.")
         return
 
-    tokenized_query = word_tokenize(query.lower())
-    preprocessed_query = ' '.join(tokenized_query)
-
-    # Create a TF-IDF vectorizer and calculate TF-IDF
-    tfidf_vectorizer = TfidfVectorizer()
-    tfidf_matrix = tfidf_vectorizer.fit_transform(corpus)
-    query_vector = tfidf_vectorizer.transform([preprocessed_query])
-
-    # Calculate cosine similarity
-    cosine_similarities = cosine_similarity(query_vector, tfidf_matrix)
-
-    # Rank documents by similarity
-    results = [(data.iloc[i], cosine_similarities[0][i]) for i in range(len(corpus))]
-    results.sort(key=lambda x: x[1], reverse=True)
-
-    # menghitung term tiap dokumen
-    count_vectorizer = CountVectorizer()
-    tf_matrix = count_vectorizer.fit_transform(corpus)
-
-    # mengambil nama terms dengan menggunakan get_features_names_out
-    terms = count_vectorizer.get_feature_names_out()
-    tf_df = pd.DataFrame(tf_matrix.toarray(), columns=terms, index=list(data['text']))
-
-    # menghitung TF pada query
-    query_df = pd.DataFrame(0, columns=terms, index=[0])
-    for term in tokenized_query:
-        if term in query_df.columns:
-            query_df.at[0, term] = 1
-
-    # menghitung Weight
-    weight = tf_matrix.multiply(query_df)
-    weight_df = pd.DataFrame(weight.A, columns=terms, index=list(data['text']))
-
-    # menghitung penyebut dengan mengkuadratkan term pada tiap dokumen |A^2|
-    square_penyebut = tf_df.apply(np.square)
-
-    # menghitung jumlah pembilang pada masing-masing document
-    sum_pembilang = weight_df.sum(axis=1)
-
-    # menghitung jumlah penyebut pada masing-masing document
-    sum_penyebut = square_penyebut.sum(axis=1)
-
-    # menghitung akar kuadrat dari jumlah penyebut masing-masing document
-    sqrt_penyebut = np.sqrt(sum_penyebut)
-
-    # melakukan operasi kuadrat pada term query |Q^2|
-    square_query = query_df.apply(np.square)
-
-    # menghitung akar kuadrat dari query |Q^2|
-    sum_square_query = square_query.sum(axis=1)
-    sqrt_square_query = np.sqrt(sum_square_query)
-
-    # menghitung perkalian antara |A|.|B|
-    multiply_documents = sqrt_penyebut * sqrt_square_query[0]
-
-    # menghitung hasil similarities
-    result_similarities = sum_pembilang / multiply_documents
-    result_similarities_sorted = sorted(enumerate(result_similarities), key=lambda x: x[1], reverse=True)
-
-    print(result_similarities)
+    # call function cosine_similarity_process
+    result_similarities_sorted = cosine_similarity_process(query, corpus)
     
     # mendisplaykan hasil
     num_doc_matched = 0
