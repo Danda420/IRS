@@ -19,6 +19,8 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import Sastrawi
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
 # Download necessary NLTK data
 nltk.download('stopwords')
@@ -28,7 +30,14 @@ nltk.download('wordnet')
 # Initialize the main window
 root = tk.Tk()
 root.title("Information Retrieval System")
-root.geometry("800x600")
+width = 1440
+height = 600
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+x_coordinate = int((screen_width/2) - (width/2))
+y_coordinate = int((screen_height/2) - (height/2) - 100)
+# set windows to center when it's run for first time
+root.geometry(f"{width}x{height}+{x_coordinate}+{y_coordinate}")
 root.minsize(800, 600)
 
 # Global variables
@@ -52,10 +61,21 @@ def load_file():
     except Exception as e:
         messagebox.showerror("Error", f"Error loading file: {str(e)}")
 
+def processed_query(query):
+    factory = StemmerFactory()
+    stemmer = factory.create_stemmer()
+    query = re.sub('[^a-zA-Z]', ' ', query)
+    query = re.sub('[!@#$%^&*()_+-<>?/.:;"{}’[]|\]', ' ', query)
+    query = word_tokenize(query)
+    query = [stemmer.stem(word.lower())
+             for word in query if word not in stopwords.words('indonesian')]
+    query = ' '.join(query)
+    return query
+
 def cosine_similarity_process(query, corpus):
     global data
-    tokenized_query = word_tokenize(query.lower())
-    preprocessed_query = ' '.join(tokenized_query)
+    preprocessed_query = processed_query(query)
+    tokenized_query = word_tokenize(preprocessed_query)
 
     # create a TF-IDF vectorixer and calculate TF-IDF
     tfidf_vectorizer = TfidfVectorizer()
