@@ -12,6 +12,9 @@ for pip_pkg in pip_pkgs:
         
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from tkinter.font import BOLD, Font
+import ttkbootstrap as tb
+from ttkbootstrap.constants import *
 import pandas as pd
 import numpy as np
 import re
@@ -145,20 +148,44 @@ def search():
     
     # mendisplaykan hasil
     num_doc_matched = 0
-    search_result_frame.delete("1.0", tk.END)
+    # clear previous results
+    for widget in main_frame.winfo_children():
+        widget.destroy()
+    total_item_founded = tk.Label(
+        main_frame, text="", anchor='w', justify='left')
+    total_item_founded.pack(fill='x', pady=(5, 16))
+    
     for i, similarity in result_similarities_sorted:
         if similarity > 0.00:
             num_doc_matched += 1
             row = data.iloc[i]
-            result_text = f"{row['text']}\nPenulis: {row['penulis']}\nTahun: {row['tahun']}\n"
-            search_result_frame.insert(tk.END, result_text)
-            link_tag = f"link-{num_doc_matched}"
-            search_result_frame.insert(tk.END, "Document Link\n\n", link_tag)
-            search_result_frame.tag_config(link_tag, foreground="blue", underline=1)
-            search_result_frame.tag_bind(link_tag, "<Button-1>", lambda e, url=row['link']: open_link(url))
+            underlined_font = Font(
+                family='Arial', underline=True, size=14, weight='bold')
 
+            # add label title to display the title document
+            title_label = tb.Label(main_frame, text=row['text'].title(), foreground='blue', cursor='hand2',
+                                   wraplength=1920, justify='left', anchor='w', font=underlined_font)
+            title_label.pack(fill='x', pady=(0, 0), ipady=20)
+            # add event bind to click the hyperlink title document
+            title_label.bind("<Button-1>", lambda e,
+                             url=row['link']: open_link(url))
+
+            # add author and year of document publication
+            author_label = tk.Label(main_frame, text=f"Penulis: {
+                row['penulis']} | Tahun Terbit : {row['tahun']}", anchor='w')
+            author_label.pack(fill='x', pady=(0, 16))
+
+    total_item_founded.config(text=f"Total item found: {num_doc_matched}")
+    # for add scrollbar in main_frame
+    main_frame.update_idletasks()
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
+    # if document not found, display it
     if num_doc_matched == 0:
-        search_result_frame.insert(tk.END, "No item matched")
+        no_result_label = tk.Label(
+            main_frame, text="No Item Matched", anchor='w')
+        no_result_label.pack(fill='x', pady=(0, 12))
+        canvas.configure(scrollregion=canvas.bbox("all"))
 
 def event_search_btn(e):
     search()
@@ -166,34 +193,67 @@ def event_search_btn(e):
 def open_link(url):
     webbrowser.open_new(url)
 
+# function to wrap label title
+def update_wraplength(event=None):
+    for widget in main_frame.winfo_children():
+        widget.config(update_wraplength=main_frame.winfo_width())
+
+# function to scroll the main_frame with mouse
+def on_mouse_wheel_scroll(event):
+    canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+# function to clear keyword
+def clear_key():
+    search_entry.delete(0, tk.END)
+
 load_file()
 
 # Header
 header_frame = tk.Frame(root)
 header_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
 
-header_label = tk.Label(header_frame, text="Information Retrieval System", font=("Arial", 16))
+header_label = tk.Label(header_frame, text="ScholarLink Information Retrieval System", font=("Arial", 16))
 header_label.pack(side=tk.LEFT, padx=20)
 
 # Search bar
 search_frame = tk.Frame(root)
 search_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
 
-search_entry = tk.Entry(search_frame, font=("Arial", 14))
-search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
+search_entry = tk.Entry(search_frame, font=("Arial", 14), width=30)
+search_entry.pack(side=tk.LEFT, fill=tk.X, padx=(20, 0))
+
+clear_keyword = tb.Button(search_frame, text='x', command=clear_key)
+clear_keyword.pack(side=tk.LEFT)
 
 search_button = tk.Button(search_frame, text="🔍", command=search, width=5)
-search_button.pack(side=tk.RIGHT, padx=10)
+search_button.pack(side=tk.LEFT, padx=10)
 # add event binding "enter key" to searching
 root.bind('<Return>', event_search_btn)
 
-# Main content
-main_frame = tk.Frame(root)
-main_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, pady=10)
+# add canvas
+canvas = tk.Canvas(root)
+canvas.pack(side='left', fill='both', expand=True, padx=20)
 
-# Search results section
-search_result_frame = tk.Text(main_frame, bg="white", fg="black")
-search_result_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+# add scrollbar to scroll the main_frame
+scrollbar = tk.Scrollbar(root, orient='vertical', command=canvas.yview)
+scrollbar.pack(side='right', fill='y')
+
+# configure the canvas
+canvas.configure(yscrollcommand=scrollbar.set)
+
+# Main content
+main_frame = tk.Frame(canvas)
+
+# add main_frame to canvas
+canvas.create_window((0, 0), window=main_frame, anchor='nw')
+
+def on_configure_scroll(event):
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
+# add event bind to scroll frame
+canvas.bind("<Configure>", on_configure_scroll)
+# add event bind to scroll frame with mousewheel
+canvas.bind_all("<MouseWheel>", on_mouse_wheel_scroll)
 
 # Run the application
 root.mainloop()
