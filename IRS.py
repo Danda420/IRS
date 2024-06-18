@@ -48,6 +48,7 @@ def load_file():
     global data, corpus
     data = None
     corpus = []
+    # script_dir = os.getcwd() # uncomment this if u wanna use it on jupyter or smth
     script_dir = os.path.dirname(os.path.abspath(__file__))
     file = os.path.join(script_dir, "dataset.csv")
     
@@ -188,8 +189,7 @@ def search():
             title_label.bind("<Leave>", label_hover_leave)
 
             # add author and year of document publication
-            author_label = tk.Label(main_frame, text=f"Penulis: {
-                row['penulis']} | Tahun Terbit: {row['tahun']}", anchor='w')
+            author_label = tk.Label(main_frame, text=f"Penulis: {row['penulis']} | Tahun Terbit: {row['tahun']}", anchor='w')
             author_label.pack(fill='x', pady=(0, 20))
             # can you add padding here
 
