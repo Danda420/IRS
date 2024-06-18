@@ -1,7 +1,7 @@
 import os
 import subprocess
 import pkg_resources
-pip_pkgs = ["nltk", "numpy", "pandas", "Sastrawi"]
+pip_pkgs = ["nltk", "numpy", "pandas", "Sastrawi", "scikit-learn", "ttkbootstrap"]
 for pip_pkg in pip_pkgs:
     try:
         dist = pkg_resources.get_distribution(pip_pkg)
