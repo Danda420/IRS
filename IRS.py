@@ -160,20 +160,21 @@ def search():
             num_doc_matched += 1
             row = data.iloc[i]
             underlined_font = Font(
-                family='Arial', underline=True, size=14, weight='bold')
+                family='Arial', underline=True, size=16, weight='bold')
 
             # add label title to display the title document
             title_label = tb.Label(main_frame, text=row['text'].title(), foreground='blue', cursor='hand2',
                                    wraplength=1920, justify='left', anchor='w', font=underlined_font)
-            title_label.pack(fill='x', pady=(0, 0), ipady=20)
+            title_label.pack(fill='x', pady=(0, 0), ipady=0)
             # add event bind to click the hyperlink title document
             title_label.bind("<Button-1>", lambda e,
                              url=row['link']: open_link(url))
 
             # add author and year of document publication
             author_label = tk.Label(main_frame, text=f"Penulis: {
-                row['penulis']} | Tahun Terbit : {row['tahun']}", anchor='w')
-            author_label.pack(fill='x', pady=(0, 16))
+                row['penulis']} | Tahun Terbit: {row['tahun']}", anchor='w')
+            author_label.pack(fill='x', pady=(0, 20))
+            # can you add padding here
 
     total_item_founded.config(text=f"Total item found: {num_doc_matched}")
     # for add scrollbar in main_frame
@@ -212,7 +213,7 @@ load_file()
 header_frame = tk.Frame(root)
 header_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
 
-header_label = tk.Label(header_frame, text="ScholarLink Information Retrieval System", font=("Arial", 16))
+header_label = tk.Label(header_frame, text="Scholarlink", font=("Arial", 24, "bold"))
 header_label.pack(side=tk.LEFT, padx=20)
 
 # Search bar
@@ -220,13 +221,15 @@ search_frame = tk.Frame(root)
 search_frame.pack(side=tk.TOP, fill=tk.X, pady=10)
 
 search_entry = tk.Entry(search_frame, font=("Arial", 14), width=30)
-search_entry.pack(side=tk.LEFT, fill=tk.X, padx=(20, 0))
+search_entry.pack(side=tk.LEFT, fill=tk.X, padx=(20, 0), ipady=5)
 
 clear_keyword = tb.Button(search_frame, text='x', command=clear_key)
-clear_keyword.pack(side=tk.LEFT)
+clear_keyword.pack(side=tk.LEFT, ipadx=5, ipady=5)
 
 search_button = tk.Button(search_frame, text="🔍", command=search, width=5)
-search_button.pack(side=tk.LEFT, padx=10)
+search_button.pack(side=tk.LEFT, fill=tk.X, padx=(10, 0), ipady=5)
+
+
 # add event binding "enter key" to searching
 root.bind('<Return>', event_search_btn)
 
