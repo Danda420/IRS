@@ -191,7 +191,12 @@ def search():
 
             # add author and year of document publication
             author_label = tk.Label(main_frame, text=f"Penulis: {row['penulis']} | Tahun Terbit: {row['tahun']}", anchor='w')
-            author_label.pack(fill='x', pady=(0, 20))
+            author_label.pack(fill='x')
+
+            # add similarity label
+            similarity_label = tk.Label(main_frame, text=f"Similarity: {
+                                        similarity}", anchor='nw', font=(BOLD))
+            similarity_label.pack(fill='x',  pady=(0, 20))
             # can you add padding here
 
     total_item_founded.config(text=f"Total item found: {num_doc_matched}")
